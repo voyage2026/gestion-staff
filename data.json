@@ -12,6 +12,10 @@
   {
    "id": "1552328789311094864",
    "name": "Lolopro | Directeur de Vogaria"
+  },
+  {
+   "id": "907950630059008060",
+   "name": "Neil | Superviseur"
   }
  ],
  "staff": [],
@@ -27,6 +31,11 @@
    "t": "2026-11-08T17:09:09.532Z",
    "w": "Admin",
    "x": "Compte autorisé : Lolopro | Directeur de Vogaria"
+  },
+  {
+   "t": "2026-11-08T17:10:22.480Z",
+   "w": "Admin",
+   "x": "Compte autorisé : Neil | Superviseur"
   }
  ]
 }
