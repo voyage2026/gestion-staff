@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>Suivi du staff</title>
+<style>
+:root{--bg:#f6f6f9;--card:#fff;--tx:#1d1d28;--mut:#6b6b7c;--bd:#e2e2ea;--ac:#5865f2;--ok:#2e9e5b;--warn:#d98a00;--bad:#d64545;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root{--bg:#17171f;--card:#22222d;--tx:#ececf3;--mut:#9a9aae;--bd:#34344a;--ac:#7983f5;--ok:#4cc27f;--warn:#f0aa2e;--bad:#f06a6a}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:720px;margin:0 auto;padding:16px}
+h1{font-size:1.4rem;margin:0 0 4px}h2{font-size:1.1rem;margin:18px 0 6px}
+.sub,.meta{color:var(--mut);font-size:.88rem}.sub{margin-bottom:14px}
+.bar{display:flex;gap:8px;margin-bottom:10px}
+input,select,textarea,button{font:inherit;color:var(--tx)}
+input,select,textarea{width:100%;padding:10px;border:1px solid var(--bd);border-radius:10px;background:var(--card)}
+button{border:0;border-radius:10px;padding:10px 14px;background:var(--ac);color:#fff;cursor:pointer;font-weight:600}
+button.sec{background:transparent;color:var(--tx);border:1px solid var(--bd)}
+button.del{background:transparent;color:var(--bad);border:1px solid var(--bd)}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.chip{padding:6px 12px;border-radius:99px;border:1px solid var(--bd);background:var(--card);color:var(--tx);font-weight:500;font-size:.85rem}
+.chip.on{background:var(--ac);color:#fff;border-color:var(--ac)}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:12px 14px;margin-bottom:8px;cursor:pointer}
+.row{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.name{font-weight:700}
+.tag{font-size:.75rem;padding:2px 9px;border-radius:99px;font-weight:600;border:1px solid currentColor}
+.actif{color:var(--ok)}.observation{color:var(--warn)}.inactif{color:var(--mut)}
+.field{margin-bottom:10px}.field label{display:block;font-size:.8rem;color:var(--mut);margin-bottom:3px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.entry{border-left:3px solid var(--ac);padding:4px 0 4px 10px;margin:10px 0}
+.entry.Avertissement,.entry.Sanction{border-color:var(--bad)}
+.entry.Promotion,.entry.Félicitation{border-color:var(--ok)}
+.entry.Observation{border-color:var(--warn)}
+.entry .h{font-size:.8rem;color:var(--mut);display:flex;justify-content:space-between}
+.entry p{margin:2px 0 0;white-space:pre-wrap}
+.x{background:none;border:0;color:var(--mut);padding:0 4px}
+.banner{background:var(--card);border:1px solid var(--warn);border-radius:10px;padding:8px 12px;margin-bottom:12px;font-size:.85rem}
+.err{color:var(--bad);font-size:.88rem;min-height:1.2em;margin:6px 0}
+.empty{color:var(--mut);text-align:center;padding:24px 0}
+.actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.gate{max-width:380px;margin:12vh auto 0}
+.nav{display:flex;gap:6px;overflow-x:auto;margin-bottom:12px;padding-bottom:4px}.nav .chip{white-space:nowrap}
+.bar2{display:flex;align-items:center;gap:8px;margin:6px 0;font-size:.88rem}.bar2 span{width:110px;flex:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.bar2 i{display:block;height:10px;border-radius:5px;background:var(--ac);min-width:2px}
+.kpi{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px}.kpi div{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:10px;text-align:center;font-size:.8rem;color:var(--mut)}.kpi b{display:block;font-size:1.4rem;color:var(--tx)}
+.late{color:var(--bad)}.soon{color:var(--warn)}.reçue{color:var(--mut)}.entretien{color:var(--warn)}.acceptée{color:var(--ok)}.refusée{color:var(--bad)}
+</style>
+</head>
+<body>
+<main id="app"><div class="empty">Chargement…</div></main>
+<script>
+var FILE="data.json";
+var D={cfg:{},members:[],staff:[],cands:[],sanctions:[],logs:[]},ME=null,ADMIN=false,VAULT=null;
+var ui={view:"load",id:null,q:"",f:"tous",tab:"staff",err:""};
+var EMPTY=()=>({cfg:{},members:[],staff:[],cands:[],sanctions:[],logs:[]});
+var TYPES=["Note","Observation","Avertissement","Sanction","Promotion","Félicitation"];
+var STATUTS=["actif","observation","inactif"];
+var app=document.getElementById("app");
+var G={owner:"",repo:"",token:"",sha:null};
+function ls(k,v){try{if(v===undefined)return localStorage.getItem(k)||"";localStorage.setItem(k,v)}catch(e){return ""}}
+(function(){
+  var h=location.hostname,p=location.pathname.split("/").filter(Boolean);
+  if(/\.github\.io$/.test(h)){G.owner=h.split(".")[0];G.repo=p[0]||h}
+  var o=ls("gh_repo");if(o.indexOf("/")>0){G.owner=o.split("/")[0];G.repo=o.split("/")[1]}
+  G.token=ls("gh_token");
+})();
+
+/* ---------- utilitaires ---------- */
+function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function today(){return new Date().toISOString().slice(0,10)}
+function fmt(d){if(!d)return"";var p=d.split("-");return p.length==3?p[2]+"/"+p[1]+"/"+p[0]:d}
+function b64(u){var s="";for(var i=0;i<u.length;i++)s+=String.fromCharCode(u[i]);return btoa(s)}
+function unb64(t){var s=atob(t),u=new Uint8Array(s.length);for(var i=0;i<s.length;i++)u[i]=s.charCodeAt(i);return u}
+function clone(x){return JSON.parse(JSON.stringify(x))}
+
+/* ---------- mot de passe admin ---------- */
+async function sha(t){return Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256",new TextEncoder().encode(t)))).map(x=>x.toString(16).padStart(2,"0")).join("")}
+async function mkPass(pw){var salt=b64(crypto.getRandomValues(new Uint8Array(16)));return {salt:salt,ph:await sha(salt+":"+pw)}}
+
+/* ---------- synchronisation GitHub ---------- */
+function api(method,body){
+  var h={"Accept":"application/vnd.github+json"};
+  if(G.token)h["Authorization"]="Bearer "+G.token;
+  var o={method:method,headers:h,cache:"no-store"};
+  if(body){o.body=JSON.stringify(body);h["Content-Type"]="application/json"}
+  return fetch("https://api.github.com/repos/"+G.owner+"/"+G.repo+"/contents/"+FILE+(method==="GET"?"?t="+Date.now():""),o);
+}
+async function loadVault(){
+  try{
+    if(G.owner&&G.repo){
+      var r=await api("GET");
+      if(r.status===404){G.sha=null;return null}
+      if(r.ok){var j=await r.json();G.sha=j.sha;return JSON.parse(new TextDecoder().decode(unb64(j.content.replace(/\s/g,""))))}
+    }
+    var f=await fetch(FILE+"?t="+Date.now());
+    if(f.ok)return await f.json();
+  }catch(e){}
+  return null;
+}
+async function push(list){
+  if(!G.token){alert("Ajoute ton jeton GitHub dans les réglages (⚙) pour enregistrer.");return false}
+  try{
+    var cur=await api("GET"),curSha=null;
+    if(cur.ok)curSha=(await cur.json()).sha;
+    else if(cur.status!==404){alert("GitHub inaccessible ("+cur.status+"). Vérifie le jeton et le nom du dépôt.");return false}
+    if(curSha!==G.sha){alert("Le coffre a été modifié depuis un autre appareil. Recharge la page.");return false}
+    var body={message:"maj",content:b64(new TextEncoder().encode(JSON.stringify(list,null,1)))};
+    if(curSha)body.sha=curSha;
+    var r=await api("PUT",body);
+    if(!r.ok){alert("Échec de l’enregistrement ("+r.status+"). Le jeton doit avoir le droit « Contents : lecture et écriture » sur ce dépôt.");return false}
+    G.sha=(await r.json()).content.sha;
+    return true;
+  }catch(e){alert("Erreur réseau : rien n’a été enregistré.");return false}
+}
+async function commit(fn,msg){var l=clone(D);fn(l);if(msg)logit(l,msg);if(await push(l)){D=l;return true}return false}
+
+/* ---------- écrans ---------- */
+/* ---------- écrans ---------- */
+var TABS=[["staff","Staff"],["essais","Essais"],["inact","Inactivité"],["cands","Candidatures"],["sanc","Sanctions"],["stats","Stats"],["logs","Journal"]];
+var CST=["reçue","entretien","acceptée","refusée"],STY=["Avertissement","Mute","Kick","Ban temporaire","Ban définitif"];
+var DAY=864e5;
+function days(d){return Math.round((new Date(d)-new Date(today()))/DAY)}
+function logit(l,x){l.logs.push({t:new Date().toISOString(),w:ME?ME.name:(ADMIN?"Admin":"—"),x:x});l.logs=l.logs.slice(-500)}
+function sname(id){var s=D.staff.find(x=>x.id===id);return s?s.pseudo:"—"}
+function lastAct(s){return [s.arrivee,s.derniere].concat(D.sanctions.filter(x=>x.auteur===s.id).map(x=>x.date)).filter(Boolean).sort().pop()||""}
+function go(view,id){ui.view=view;ui.id=id||null;render()}
+function render(){({gate:gate,setup:setup,dlogin:dlogin,settings:settings,fiche:fiche,main:main})[ui.view]()}
+
+function form(title,fields,v,save,back,del){
+  var h=`<button class="sec" id="back">← Retour</button><h1 style="margin-top:12px">${title}</h1>`;
+  fields.forEach(f=>{
+    var val=v[f.k]==null?"":v[f.k],c;
+    if(f.t==="select")c=`<select id="f_${f.k}">`+f.o.map(o=>{o=[].concat(o);return `<option value="${esc(o[0])}"${String(val)===String(o[0])?" selected":""}>${esc(o[o.length-1])}</option>`}).join("")+`</select>`;
+    else if(f.t==="area")c=`<textarea id="f_${f.k}" rows="3">${esc(val)}</textarea>`;
+    else c=`<input id="f_${f.k}" type="${f.t||"text"}" value="${esc(val)}">`;
+    h+=`<div class="field"><label>${f.l}</label>${c}</div>`;
+  });
+  h+=`<div class="actions"><button id="ok">Enregistrer</button><button class="sec" id="cancel">Annuler</button>${del?'<button class="del" id="del">Supprimer</button>':""}</div>`;
+  app.innerHTML=h;
+  document.getElementById("back").onclick=document.getElementById("cancel").onclick=back;
+  if(del)document.getElementById("del").onclick=()=>{if(confirm("Supprimer définitivement ?"))del()};
+  document.getElementById("ok").onclick=()=>{
+    var o={};fields.forEach(f=>o[f.k]=document.getElementById("f_"+f.k).value.trim());
+    if(fields[0].req&&!o[fields[0].k])return alert("Le champ « "+fields[0].l+" » est obligatoire.");
+    save(o);
+  };
+}
+function backMain(){ui.view="main";render()}
+
+function gate(){
+  var dc=D.cfg.cid;
+  app.innerHTML=`<div class="gate"><h1>Suivi du staff</h1>${dc?`<div class="sub">Staff : connecte-toi avec Discord.</div><button id="dl" style="width:100%">Se connecter avec Discord</button><div class="sub" style="margin:20px 0 6px">Admin</div>`:'<div class="sub">Accès admin.</div>'}<div class="err" id="err">${esc(ui.err)}</div><div class="field"><input type="password" id="pw" placeholder="Mot de passe admin" autocomplete="current-password"></div><button id="go" class="${dc?"sec":""}" style="width:100%">Entrer en admin</button></div>`;
+  if(dc)document.getElementById("dl").onclick=()=>{location.href="https://discord.com/oauth2/authorize?client_id="+dc+"&response_type=token&scope=identify&redirect_uri="+encodeURIComponent(location.origin+location.pathname)};
+  var go2=async()=>{
+    var pw=document.getElementById("pw").value;if(!pw)return;
+    if(await sha(D.cfg.salt+":"+pw)===D.cfg.ph){ADMIN=true;ui.err="";ui.view="main";render()}
+    else{ui.err="Mot de passe incorrect.";gate()}
+  };
+  document.getElementById("go").onclick=go2;
+  document.getElementById("pw").onkeydown=e=>{if(e.key==="Enter")go2()};
+}
+function setup(){
+  app.innerHTML=`<div class="gate"><h1>Premier lancement</h1><div class="sub">Crée ton mot de passe admin : il te donne le contrôle total du site.</div>
+  <div class="field"><label>Mot de passe admin (10 caractères minimum)</label><input type="password" id="p1" autocomplete="new-password"></div>
+  <div class="field"><label>Confirmer le mot de passe</label><input type="password" id="p2" autocomplete="new-password"></div>
+  <div class="field"><label>Dépôt GitHub (propriétaire/nom)</label><input id="rp" value="${esc(G.owner&&G.repo?G.owner+"/"+G.repo:"")}"></div>
+  <div class="field"><label>Jeton GitHub (voir le README)</label><input type="password" id="tk" value="${esc(G.token)}"></div>
+  <div class="field"><label>Client ID Discord (optionnel, voir le README)</label><input id="cid" inputmode="numeric"></div>
+  <div class="err" id="err"></div><button id="go" style="width:100%">Créer et enregistrer</button></div>`;
+  document.getElementById("go").onclick=async()=>{
+    var g=i=>document.getElementById(i).value.trim(),e=document.getElementById("err");
+    var p1=document.getElementById("p1").value,p2=document.getElementById("p2").value,rp=g("rp"),tk=g("tk");
+    if(p1.length<10)return e.textContent="Le mot de passe doit faire au moins 10 caractères.";
+    if(p1!==p2)return e.textContent="Les deux mots de passe sont différents.";
+    if(rp.split("/").length!==2||!tk)return e.textContent="Renseigne le dépôt et le jeton GitHub.";
+    G.owner=rp.split("/")[0];G.repo=rp.split("/")[1];G.token=tk;ls("gh_repo",rp);ls("gh_token",tk);
+    var d=EMPTY();d.cfg=Object.assign({cid:g("cid")},await mkPass(p1));
+    if(await push(d)){D=d;ADMIN=true;ui.view="main";render()}
+  };
+}
+function settings(){
+  var ad=D.members.map((a,i)=>`<div class="row" style="margin:4px 0"><span>${esc(a.name||"?")} <span class="meta">${esc(a.id)}</span></span><button class="x" data-a="${i}" aria-label="Retirer">✕</button></div>`).join("")||'<div class="meta">Aucun compte autorisé pour l’instant.</div>';
+  app.innerHTML=`<button class="sec" id="back">← Retour</button><h1 style="margin-top:12px">Réglages</h1>
+  <h2>Cet appareil</h2><div class="field"><label>Dépôt GitHub (propriétaire/nom)</label><input id="rp" value="${esc(G.owner+"/"+G.repo)}"></div>
+  <div class="field"><label>Jeton GitHub (nécessaire pour enregistrer)</label><input type="password" id="tk" value="${esc(G.token)}"></div><button id="sv">Enregistrer</button>
+  ${ADMIN?`<h2>Comptes Discord autorisés</h2><div class="field"><label>Client ID Discord (vide = connexion Discord désactivée)</label><input id="cid" value="${esc(D.cfg.cid||"")}" inputmode="numeric"></div><button id="sc" class="sec">Enregistrer le Client ID</button>
+  <div style="margin-top:12px">${ad}</div><div class="grid" style="margin-top:8px"><input id="ai" placeholder="ID Discord" inputmode="numeric"><input id="an" placeholder="Nom (pour t’y retrouver)"></div><button id="aa" class="sec" style="margin-top:8px">Autoriser ce compte</button>
+  <h2>Mot de passe admin</h2><div class="field"><input type="password" id="np" placeholder="Nouveau mot de passe (10 caractères min.)" autocomplete="new-password"></div><button id="cp" class="sec">Changer le mot de passe</button>
+  <h2>Sauvegarde</h2><div class="actions"><button id="ex" class="sec">Exporter (JSON)</button><button id="im" class="sec">Importer</button></div><input type="file" id="fi" accept=".json,application/json" hidden>`:""}
+  <h2>Session</h2><button id="lk" class="del">Se déconnecter</button>`;
+  var $=i=>document.getElementById(i);
+  $("back").onclick=backMain;
+  $("sv").onclick=()=>{var rp=$("rp").value.trim();if(rp.split("/").length===2){G.owner=rp.split("/")[0];G.repo=rp.split("/")[1];ls("gh_repo",rp)}G.token=$("tk").value.trim();ls("gh_token",G.token);alert("Enregistré.")};
+  $("lk").onclick=()=>{try{sessionStorage.removeItem("dt")}catch(e){}location.reload()};
+  if(!ADMIN)return;
+  $("sc").onclick=()=>commit(l=>{l.cfg.cid=$("cid").value.trim()},"Client ID Discord modifié").then(ok=>ok&&alert("Enregistré."));
+  $("aa").onclick=()=>{var id=$("ai").value.trim(),n=$("an").value.trim();if(!/^\d{15,22}$/.test(id))return alert("Un ID Discord est un nombre de 17 à 19 chiffres.");commit(l=>l.members.push({id:id,name:n}),"Compte autorisé : "+(n||id)).then(ok=>ok&&render())};
+  app.querySelectorAll("[data-a]").forEach(b=>b.onclick=()=>{var a=D.members[b.dataset.a];commit(l=>l.members.splice(b.dataset.a,1),"Compte retiré : "+(a.name||a.id)).then(ok=>ok&&render())});
+  $("cp").onclick=async()=>{var np=$("np").value;if(np.length<10)return alert("Au moins 10 caractères.");var p=await mkPass(np);commit(l=>Object.assign(l.cfg,p),"Mot de passe admin changé").then(ok=>ok&&alert("Mot de passe changé."))};
+  $("ex").onclick=()=>{var a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(D,null,1)],{type:"application/json"}));a.download="suivi-staff-"+today()+".json";document.body.appendChild(a);a.click();a.remove()};
+  $("im").onclick=()=>$("fi").click();
+  $("fi").onchange=async e=>{var f=e.target.files[0];if(!f)return;var x;try{x=JSON.parse(await f.text())}catch(z){return alert("Fichier illisible.")}
+    if(!Array.isArray(x.staff))return alert("Ce fichier n’est pas une sauvegarde valide.");
+    if(!confirm("Remplacer toutes les données actuelles par cette sauvegarde ?"))return;
+    commit(l=>{["staff","cands","sanctions","logs"].forEach(k=>l[k]=x[k]||[])},"Sauvegarde importée").then(ok=>ok&&alert("Sauvegarde importée."))};
+}
+
+function main(){
+  app.innerHTML=`<div class="row"><h1>Suivi du staff</h1><button class="sec" id="st" aria-label="Réglages">⚙</button></div>${ADMIN?'<div class="meta" style="margin-bottom:8px">Connecté en admin</div>':""}${G.token?"":'<div class="banner">Lecture seule : ajoute un jeton GitHub dans ⚙ pour modifier.</div>'}<div class="nav">${TABS.map(t=>`<button class="chip${ui.tab===t[0]?" on":""}" data-t="${t[0]}">${t[1]}</button>`).join("")}</div><div id="tab"></div>`;
+  document.getElementById("st").onclick=()=>go("settings");
+  app.querySelectorAll("[data-t]").forEach(b=>b.onclick=()=>{ui.tab=b.dataset.t;ui.q="";main()});
+  ({staff:tStaff,essais:tEssais,inact:tInact,cands:tCands,sanc:tSanc,stats:tStats,logs:tLogs})[ui.tab](document.getElementById("tab"));
+}
+function search(el,fn,ph,addLabel,addFn){
+  el.innerHTML=`<div class="bar"><input id="q" placeholder="${ph}" value="${esc(ui.q)}">${addLabel?`<button id="add">${addLabel}</button>`:""}</div><div id="res"></div>`;
+  var q=document.getElementById("q"),r=document.getElementById("res");
+  var upd=()=>{r.innerHTML=fn(ui.q.toLowerCase())||'<div class="empty">Rien à afficher.</div>'};
+  q.oninput=()=>{ui.q=q.value;upd();bind(r)};
+  if(addLabel)document.getElementById("add").onclick=addFn;
+  upd();bind(r);
+}
+function bind(r){r.querySelectorAll("[data-go]").forEach(c=>c.onclick=()=>{var p=c.dataset.go.split(":");p[0]==="fiche"?go("fiche",p[1]):p[0]==="csanc"?editSanc(p[1]):editCand(p[1])})}
+
+function tStaff(el){
+  search(el,q=>{
+    var h="";
+    D.staff.filter(s=>(ui.f==="tous"||s.statut===ui.f)&&(!q||(s.pseudo+" "+s.grade+" "+s.discordId).toLowerCase().includes(q))).sort((a,b)=>a.pseudo.localeCompare(b.pseudo)).forEach(s=>{h+=`<div class="card" data-go="fiche:${s.id}"><div class="row"><span class="name">${esc(s.pseudo)}</span><span class="tag ${s.statut}">${s.statut}</span></div><div class="meta">${esc(s.grade||"Sans grade")} · ${(s.entries||[]).length} entrée(s)</div></div>`});
+    return h;
+  },"Rechercher un pseudo, un grade…","+ Staff",()=>editStaff(null));
+  var c=document.createElement("div");c.className="chips";c.innerHTML=["tous"].concat(STATUTS).map(f=>`<button class="chip${ui.f===f?" on":""}" data-f="${f}">${f}</button>`).join("");
+  el.insertBefore(c,document.getElementById("res"));
+  c.querySelectorAll("[data-f]").forEach(b=>b.onclick=()=>{ui.f=b.dataset.f;main()});
+}
+function editStaff(id){
+  var s=id?D.staff.find(x=>x.id===id):{arrivee:today(),statut:"actif"};
+  form(id?"Modifier le staff":"Nouveau staff",[
+    {k:"pseudo",l:"Pseudo",req:1},{k:"discordId",l:"ID Discord (optionnel)"},{k:"grade",l:"Grade / rôle"},
+    {k:"arrivee",l:"Date d’arrivée",t:"date"},{k:"essaiFin",l:"Fin de période d’essai (optionnel)",t:"date"},{k:"statut",l:"Statut",t:"select",o:STATUTS}
+  ],s,o=>{
+    var nid=id||"s"+Date.now();
+    commit(l=>{var d=l.staff.find(x=>x.id===nid);if(!d){d={id:nid,entries:[]};l.staff.push(d)}Object.assign(d,o)},"Staff "+(id?"modifié":"ajouté")+" : "+o.pseudo).then(ok=>ok&&go("fiche",nid));
+  },()=>id?go("fiche",id):backMain());
+}
+function fiche(){
+  var s=D.staff.find(x=>x.id===ui.id);if(!s)return backMain();
+  var es=(s.entries||[]).slice().sort((a,b)=>b.date<a.date?-1:b.date>a.date?1:b.id.localeCompare(a.id));
+  app.innerHTML=`<button class="sec" id="back">← Retour</button><div class="row" style="margin-top:12px"><h1>${esc(s.pseudo)}</h1><span class="tag ${s.statut}">${s.statut}</span></div>
+  <div class="meta">${esc(s.grade||"Sans grade")} · arrivé(e) le ${fmt(s.arrivee)}${s.discordId?" · ID "+esc(s.discordId):""}<br>Dernière activité : ${fmt(lastAct(s))}${s.essaiFin?" · fin d’essai le "+fmt(s.essaiFin):""}</div>
+  <div class="actions"><button class="sec" id="edit">Modifier</button><button class="sec" id="act">Marquer actif aujourd’hui</button>${ADMIN?'<button class="del" id="del">Supprimer</button>':""}</div>
+  <h2>Ajouter une entrée</h2><div class="grid"><div class="field"><select id="e_type">${TYPES.map(t=>`<option>${t}</option>`).join("")}</select></div><div class="field"><input type="date" id="e_date" value="${today()}"></div></div>
+  <div class="field"><textarea id="e_txt" rows="3" placeholder="Reste factuel : ce qui s’est passé, la décision prise…"></textarea></div><button id="e_add">Ajouter au dossier</button><h2>Historique</h2>
+  ${es.length?es.map(e=>`<div class="entry ${e.type}"><div class="h"><span><b>${e.type}</b> · ${fmt(e.date)}</span>${ADMIN?`<button class="x" data-e="${e.id}" aria-label="Supprimer">✕</button>`:""}</div><p>${esc(e.texte)}</p></div>`).join(""):'<div class="empty">Rien pour l’instant.</div>'}`;
+  var $=i=>document.getElementById(i);
+  $("back").onclick=backMain;$("edit").onclick=()=>editStaff(s.id);
+  $("act").onclick=()=>commit(l=>{l.staff.find(x=>x.id===s.id).derniere=today()},"Activité confirmée : "+s.pseudo).then(ok=>ok&&render());
+  if($("del"))$("del").onclick=()=>{if(confirm("Supprimer définitivement le dossier de "+s.pseudo+" ?"))commit(l=>l.staff.splice(l.staff.findIndex(x=>x.id===s.id),1),"Staff supprimé : "+s.pseudo).then(ok=>ok&&backMain())};
+  $("e_add").onclick=()=>{var t=$("e_txt").value.trim();if(!t)return;var ty=$("e_type").value,dt=$("e_date").value||today();
+    commit(l=>{var d=l.staff.find(x=>x.id===s.id);d.entries=d.entries||[];d.entries.push({id:"e"+Date.now(),type:ty,date:dt,texte:t})},ty+" ajouté(e) au dossier de "+s.pseudo).then(ok=>ok&&render())};
+  app.querySelectorAll("[data-e]").forEach(b=>b.onclick=()=>{if(!confirm("Supprimer cette entrée ?"))return;
+    commit(l=>{var d=l.staff.find(x=>x.id===s.id);d.entries=d.entries.filter(x=>x.id!==b.dataset.e)},"Entrée supprimée du dossier de "+s.pseudo).then(ok=>ok&&render())});
+}
+
+function tEssais(el){
+  var l=D.staff.filter(s=>s.essaiFin).sort((a,b)=>a.essaiFin.localeCompare(b.essaiFin));
+  el.innerHTML=l.length?l.map(s=>{var n=days(s.essaiFin),c=n<0?"late":n<=7?"soon":"";return `<div class="card" data-go="fiche:${s.id}"><div class="row"><span class="name">${esc(s.pseudo)}</span><span class="tag ${c}">${n<0?"terminée depuis "+(-n)+" j":n===0?"fin aujourd’hui":"J-"+n}</span></div><div class="meta">${esc(s.grade||"Sans grade")} · fin le ${fmt(s.essaiFin)}</div><div class="actions"><button class="sec" data-v="${s.id}">Valider l’essai</button></div></div>`}).join(""):'<div class="empty">Aucune période d’essai en cours. Renseigne une date de fin dans la fiche d’un staff.</div>';
+  bind(el);
+  el.querySelectorAll("[data-v]").forEach(b=>b.onclick=e=>{e.stopPropagation();var s=D.staff.find(x=>x.id===b.dataset.v);
+    commit(l=>{var d=l.staff.find(x=>x.id===s.id);delete d.essaiFin;d.entries=d.entries||[];d.entries.push({id:"e"+Date.now(),type:"Promotion",date:today(),texte:"Période d’essai validée."})},"Essai validé : "+s.pseudo).then(ok=>ok&&main())});
+}
+function tInact(el){
+  var n=ui.days||30;
+  var l=D.staff.filter(s=>s.statut==="actif"&&(new Date(today())-new Date(lastAct(s)||s.arrivee||today()))/DAY>n).sort((a,b)=>lastAct(a).localeCompare(lastAct(b)));
+  el.innerHTML=`<div class="field"><label>Sans activité depuis plus de</label><select id="dd">${[14,30,60,90].map(x=>`<option value="${x}"${x===n?" selected":""}>${x} jours</option>`).join("")}</select></div><div class="meta" style="margin-bottom:8px">L’activité compte la date d’arrivée, le bouton « Marquer actif » et les sanctions données.</div>`+
+  (l.length?l.map(s=>`<div class="card" data-go="fiche:${s.id}"><div class="row"><span class="name">${esc(s.pseudo)}</span><span class="tag late">${Math.round((new Date(today())-new Date(lastAct(s)))/DAY)} j</span></div><div class="meta">${esc(s.grade||"Sans grade")} · dernière activité ${fmt(lastAct(s))}</div><div class="actions"><button class="sec" data-a="${s.id}">Marquer actif</button><button class="sec" data-i="${s.id}">Passer inactif</button></div></div>`).join(""):'<div class="empty">Aucun staff inactif.</div>');
+  document.getElementById("dd").onchange=e=>{ui.days=+e.target.value;main()};
+  bind(el);
+  el.querySelectorAll("[data-a]").forEach(b=>b.onclick=e=>{e.stopPropagation();var s=D.staff.find(x=>x.id===b.dataset.a);commit(l=>{l.staff.find(x=>x.id===s.id).derniere=today()},"Activité confirmée : "+s.pseudo).then(ok=>ok&&main())});
+  el.querySelectorAll("[data-i]").forEach(b=>b.onclick=e=>{e.stopPropagation();var s=D.staff.find(x=>x.id===b.dataset.i);commit(l=>{l.staff.find(x=>x.id===s.id).statut="inactif"},"Passé inactif : "+s.pseudo).then(ok=>ok&&main())});
+}
+
+function tCands(el){
+  search(el,q=>D.cands.filter(c=>!q||(c.pseudo+" "+c.poste).toLowerCase().includes(q)).sort((a,b)=>(b.date||"").localeCompare(a.date||"")).map(c=>`<div class="card" data-go="ccand:${c.id}"><div class="row"><span class="name">${esc(c.pseudo)}</span><span class="tag ${c.statut}">${c.statut}</span></div><div class="meta">${esc(c.poste||"Poste non précisé")} · ${fmt(c.date)}${c.score?" · note "+esc(c.score)+"/10":""}</div>${c.statut==="acceptée"&&!D.staff.some(s=>s.candId===c.id)?`<div class="actions"><button class="sec" data-s="${c.id}">Créer le dossier staff</button></div>`:""}</div>`).join(""),"Rechercher une candidature…","+ Candidature",()=>editCand(null));
+  el.querySelectorAll("[data-s]").forEach(b=>b.onclick=e=>{e.stopPropagation();var c=D.cands.find(x=>x.id===b.dataset.s);
+    commit(l=>l.staff.push({id:"s"+Date.now(),candId:c.id,pseudo:c.pseudo,discordId:c.discordId||"",grade:c.poste||"",arrivee:today(),essaiFin:new Date(Date.now()+30*DAY).toISOString().slice(0,10),statut:"actif",entries:[]}),"Candidature acceptée, dossier staff créé : "+c.pseudo).then(ok=>ok&&alert("Dossier créé, avec 30 jours d’essai."))});
+}
+function editCand(id){
+  var c=id?D.cands.find(x=>x.id===id):{date:today(),statut:"reçue"};
+  form(id?"Modifier la candidature":"Nouvelle candidature",[
+    {k:"pseudo",l:"Pseudo",req:1},{k:"discordId",l:"ID Discord"},{k:"poste",l:"Poste visé"},{k:"date",l:"Date de la candidature",t:"date"},
+    {k:"statut",l:"Statut",t:"select",o:CST},{k:"score",l:"Note sur 10",t:"number"},{k:"notes",l:"Avis, points forts, réserves",t:"area"}
+  ],c,o=>{var nid=id||"c"+Date.now();
+    commit(l=>{var d=l.cands.find(x=>x.id===nid);if(!d){d={id:nid};l.cands.push(d)}Object.assign(d,o)},"Candidature "+(id?"modifiée":"ajoutée")+" : "+o.pseudo+" ("+o.statut+")").then(ok=>ok&&backMain());
+  },backMain,id&&ADMIN?()=>commit(l=>l.cands.splice(l.cands.findIndex(x=>x.id===id),1),"Candidature supprimée : "+c.pseudo).then(ok=>ok&&backMain()):null);
+}
+
+function cnt(p){return D.sanctions.filter(x=>x.joueur.toLowerCase()===p.toLowerCase()).length}
+function tSanc(el){
+  search(el,q=>D.sanctions.filter(x=>!q||(x.joueur+" "+x.joueurId+" "+x.motif).toLowerCase().includes(q)).sort((a,b)=>b.date.localeCompare(a.date)||b.id.localeCompare(a.id)).map(x=>{var n=cnt(x.joueur);return `<div class="card" data-go="csanc:${x.id}"><div class="row"><span class="name">${esc(x.joueur)}</span><span class="tag ${x.type==="Avertissement"?"observation":"late"}">${esc(x.type)}</span></div><div class="meta">${fmt(x.date)} · par ${esc(sname(x.auteur))}${x.duree?" · "+esc(x.duree):""}${n>=3?" · récidive ×"+n:""}</div><div>${esc(x.motif)}</div></div>`}).join(""),"Rechercher un joueur, un motif…","+ Sanction",()=>editSanc(null));
+}
+function editSanc(id){
+  var x=id?D.sanctions.find(y=>y.id===id):{date:today(),type:"Avertissement"};
+  form(id?"Modifier la sanction":"Nouvelle sanction",[
+    {k:"joueur",l:"Joueur (pseudo)",req:1},{k:"joueurId",l:"ID Discord du joueur"},{k:"type",l:"Type",t:"select",o:STY},{k:"duree",l:"Durée (si temporaire)"},
+    {k:"motif",l:"Motif",t:"area"},{k:"date",l:"Date",t:"date"},{k:"auteur",l:"Staff auteur",t:"select",o:[["","—"]].concat(D.staff.map(s=>[s.id,s.pseudo]))}
+  ],x,o=>{var nid=id||"x"+Date.now();
+    commit(l=>{var d=l.sanctions.find(y=>y.id===nid);if(!d){d={id:nid};l.sanctions.push(d)}Object.assign(d,o)},"Sanction "+(id?"modifiée":"ajoutée")+" : "+o.type+" pour "+o.joueur).then(ok=>ok&&backMain());
+  },backMain,id&&ADMIN?()=>commit(l=>l.sanctions.splice(l.sanctions.findIndex(y=>y.id===id),1),"Sanction supprimée : "+x.joueur).then(ok=>ok&&backMain()):null);
+}
+
+function bars(rows){var m=Math.max.apply(null,rows.map(r=>r[1]).concat([1]));return rows.length?rows.map(r=>`<div class="bar2"><span>${esc(r[0])}</span><i style="width:${Math.round(r[1]/m*60)}%"></i><b>${r[1]}</b></div>`).join(""):'<div class="meta">Pas de données.</div>'}
+function tStats(el){
+  var S2=D.sanctions,c30=S2.filter(x=>(new Date(today())-new Date(x.date))/DAY<=30).length;
+  var by=f=>{var o={};S2.forEach(x=>{var k=f(x);o[k]=(o[k]||0)+1});return o};
+  var ty=by(x=>x.type),au=by(x=>sname(x.auteur)),pl={};S2.forEach(x=>{var k=x.joueur.toLowerCase();pl[k]=pl[k]||[x.joueur,0];pl[k][1]++});
+  var mois=[];for(var i=5;i>=0;i--){var d=new Date();d.setDate(1);d.setMonth(d.getMonth()-i);var k=d.toISOString().slice(0,7);mois.push([k.slice(5)+"/"+k.slice(0,4),S2.filter(x=>(x.date||"").slice(0,7)===k).length])}
+  el.innerHTML=`<div class="kpi"><div><b>${S2.length}</b>sanctions</div><div><b>${c30}</b>sur 30 jours</div><div><b>${Object.keys(pl).filter(k=>pl[k][1]>=3).length}</b>récidivistes</div></div>
+  <h2>Par mois</h2>${bars(mois)}<h2>Par type</h2>${bars(STY.map(t=>[t,ty[t]||0]))}<h2>Par staff</h2>${bars(Object.keys(au).map(k=>[k,au[k]]).sort((a,b)=>b[1]-a[1]).slice(0,8))}<h2>Joueurs les plus sanctionnés</h2>${bars(Object.keys(pl).map(k=>pl[k]).sort((a,b)=>b[1]-a[1]).slice(0,8))}`;
+}
+function tLogs(el){
+  el.innerHTML=D.logs.length?D.logs.slice().reverse().map(x=>{var d=new Date(x.t);return `<div class="entry"><div class="h"><span>${d.toLocaleDateString("fr-FR")} ${d.toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"})}</span><span>${esc(x.w)}</span></div><p>${esc(x.x)}</p></div>`}).join(""):'<div class="empty">Le journal se remplit automatiquement à chaque modification.</div>';
+}
+
+/* ---------- démarrage ---------- */
+function dTok(){var m=location.hash.match(/access_token=([^&]+)/);if(m){try{sessionStorage.setItem("dt",m[1])}catch(e){}history.replaceState(null,"",location.pathname+location.search)}try{return sessionStorage.getItem("dt")||""}catch(e){return ""}}
+(async function(){
+  if(!window.crypto||!crypto.subtle){app.innerHTML='<div class="empty">Ouvre le site en HTTPS (GitHub Pages).</div>';return}
+  VAULT=await loadVault();
+  if(!VAULT||!VAULT.cfg||!VAULT.cfg.ph){ui.view="setup";return render()}
+  D=Object.assign(EMPTY(),VAULT);
+  var t=D.cfg.cid?dTok():"";
+  if(t){
+    try{var r=await fetch("https://discord.com/api/users/@me",{headers:{Authorization:"Bearer "+t}});if(r.ok){var j=await r.json();ME={id:j.id,name:j.global_name||j.username}}}catch(e){}
+    if(ME){
+      if(D.members.some(m=>m.id===ME.id)){ui.view="main";return render()}
+      ui.err="Accès refusé : ton compte Discord (ID "+ME.id+") n’est pas autorisé. Donne cet ID à l’admin.";
+    }
+  }
+  ui.view="gate";render();
+})();
+</script>
+</body>
+</html>
