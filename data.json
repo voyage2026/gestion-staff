@@ -4,9 +4,20 @@
   "salt": "4Gpmq9180a/ClIQ2u0ZrVQ==",
   "ph": "b9fa48c9dbf285b17f20bda7b025a22a8c53ac55403d4f87a05e276c830558ce"
  },
- "members": [],
+ "members": [
+  {
+   "id": "1111345975206887474",
+   "name": "Chicotoos | Fondateur"
+  }
+ ],
  "staff": [],
  "cands": [],
  "sanctions": [],
- "logs": []
+ "logs": [
+  {
+   "t": "2026-11-08T17:08:25.310Z",
+   "w": "Admin",
+   "x": "Compte autorisé : Chicotoos | Fondateur"
+  }
+ ]
 }
