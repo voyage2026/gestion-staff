@@ -16,10 +16,6 @@
   {
    "id": "907950630059008060",
    "name": "Neil | Superviseur"
-  },
-  {
-   "id": "923889322971783189",
-   "name": "Théo | Gérant Staff"
   }
  ],
  "staff": [],
@@ -45,6 +41,11 @@
    "t": "2026-11-08T17:16:03.854Z",
    "w": "Admin",
    "x": "Compte autorisé : Théo | Gérant Staff"
+  },
+  {
+   "t": "2026-11-08T17:20:10.605Z",
+   "w": "Admin",
+   "x": "Compte retiré : Théo | Gérant Staff"
   }
  ]
 }
