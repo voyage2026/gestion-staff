@@ -18,34 +18,186 @@
    "name": "Neil | Superviseur"
   }
  ],
- "staff": [],
+ "staff": [
+  {
+   "id": "s1000",
+   "pseudo": "Horatio1455",
+   "discordId": "",
+   "grade": "Référent Modérateur",
+   "arrivee": "2026-11-08",
+   "statut": "actif",
+   "entries": []
+  },
+  {
+   "id": "s1001",
+   "pseudo": "Paul",
+   "discordId": "",
+   "grade": "Référent Modérateur",
+   "arrivee": "2026-11-08",
+   "statut": "actif",
+   "entries": []
+  },
+  {
+   "id": "s1002",
+   "pseudo": "Mickael",
+   "discordId": "",
+   "grade": "Super-Admin",
+   "arrivee": "2026-11-08",
+   "statut": "actif",
+   "entries": []
+  },
+  {
+   "id": "s1003",
+   "pseudo": "Soufian",
+   "discordId": "",
+   "grade": "Admin",
+   "arrivee": "2026-11-08",
+   "statut": "actif",
+   "entries": []
+  },
+  {
+   "id": "s1004",
+   "pseudo": "Abi",
+   "discordId": "",
+   "grade": "Référent Admin",
+   "arrivee": "2026-11-08",
+   "statut": "actif",
+   "entries": []
+  },
+  {
+   "id": "s1005",
+   "pseudo": "Kallen",
+   "discordId": "",
+   "grade": "Admin",
+   "arrivee": "2026-11-08",
+   "statut": "actif",
+   "entries": []
+  },
+  {
+   "id": "s1006",
+   "pseudo": "Mxtveo",
+   "discordId": "",
+   "grade": "Admin",
+   "arrivee": "2026-11-08",
+   "statut": "actif",
+   "entries": []
+  },
+  {
+   "id": "s1007",
+   "pseudo": "ZeSteel",
+   "discordId": "",
+   "grade": "Admin",
+   "arrivee": "2026-11-08",
+   "statut": "actif",
+   "entries": []
+  },
+  {
+   "id": "s1008",
+   "pseudo": "Lucas",
+   "discordId": "",
+   "grade": "Modérateur",
+   "arrivee": "2026-11-08",
+   "statut": "actif",
+   "entries": []
+  },
+  {
+   "id": "s1009",
+   "pseudo": "wsdr",
+   "discordId": "",
+   "grade": "Modérateur",
+   "arrivee": "2026-11-08",
+   "statut": "actif",
+   "entries": []
+  },
+  {
+   "id": "s1010",
+   "pseudo": "Polopro",
+   "discordId": "",
+   "grade": "Modérateur",
+   "arrivee": "2026-11-08",
+   "statut": "actif",
+   "entries": []
+  },
+  {
+   "id": "s1011",
+   "pseudo": "Onyxs",
+   "discordId": "",
+   "grade": "Modérateur",
+   "arrivee": "2026-11-08",
+   "statut": "actif",
+   "entries": []
+  },
+  {
+   "id": "s1012",
+   "pseudo": "Mr.Bybo",
+   "discordId": "",
+   "grade": "Modérateur",
+   "arrivee": "2026-11-08",
+   "statut": "actif",
+   "entries": []
+  },
+  {
+   "id": "s1013",
+   "pseudo": "Théo Anderson",
+   "discordId": "",
+   "grade": "Modérateur",
+   "arrivee": "2026-11-08",
+   "statut": "actif",
+   "entries": []
+  },
+  {
+   "id": "s1014",
+   "pseudo": "Mengty",
+   "discordId": "",
+   "grade": "Modérateur Stagiaire",
+   "arrivee": "2026-11-08",
+   "statut": "actif",
+   "entries": [],
+   "essaiFin": "2026-11-14"
+  },
+  {
+   "id": "s1015",
+   "pseudo": "demonashura66",
+   "discordId": "",
+   "grade": "Modérateur Stagiaire",
+   "arrivee": "2026-11-08",
+   "statut": "actif",
+   "entries": [],
+   "essaiFin": "2026-11-08"
+  },
+  {
+   "id": "s1016",
+   "pseudo": "hydrakxs",
+   "discordId": "",
+   "grade": "Modérateur Stagiaire",
+   "arrivee": "2026-11-08",
+   "statut": "actif",
+   "entries": [],
+   "essaiFin": "2026-11-14"
+  },
+  {
+   "id": "s1017",
+   "pseudo": "Shdw",
+   "discordId": "",
+   "grade": "Modérateur Stagiaire",
+   "arrivee": "2026-11-08",
+   "statut": "actif",
+   "entries": [],
+   "essaiFin": "2026-11-14"
+  }
+ ],
  "cands": [],
  "sanctions": [],
  "logs": [
   {
-   "t": "2026-11-08T17:08:25.310Z",
-   "w": "Admin",
-   "x": "Compte autorisé : Chicotoos | Fondateur"
+   "t": "2026-11-08T17:23:09.859865Z",
+   "w": "Import",
+   "x": "Import initial de la liste du staff (18 membres)"
   },
   {
-   "t": "2026-11-08T17:09:09.532Z",
-   "w": "Admin",
-   "x": "Compte autorisé : Lolopro | Directeur de Vogaria"
-  },
-  {
-   "t": "2026-11-08T17:10:22.480Z",
-   "w": "Admin",
-   "x": "Compte autorisé : Neil | Superviseur"
-  },
-  {
-   "t": "2026-11-08T17:16:03.854Z",
-   "w": "Admin",
-   "x": "Compte autorisé : Théo | Gérant Staff"
-  },
-  {
-   "t": "2026-11-08T17:20:10.605Z",
-   "w": "Admin",
-   "x": "Compte retiré : Théo | Gérant Staff"
+   "t": "2026-11-08T17:24:35.922Z",
+   "w": "Théo",
+   "x": "Sauvegarde importée"
   }
  ]
 }
