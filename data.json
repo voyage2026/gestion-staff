@@ -162,8 +162,14 @@
    "grade": "Modérateur Stagiaire",
    "arrivee": "2026-11-08",
    "statut": "actif",
-   "entries": [],
-   "essaiFin": "2026-11-08"
+   "entries": [
+    {
+     "id": "e1794158706061",
+     "type": "Promotion",
+     "date": "2026-11-08",
+     "texte": "Période d’essai validée."
+    }
+   ]
   },
   {
    "id": "s1016",
@@ -198,6 +204,11 @@
    "t": "2026-11-08T17:24:35.922Z",
    "w": "Théo",
    "x": "Sauvegarde importée"
+  },
+  {
+   "t": "2026-11-08T17:25:06.061Z",
+   "w": "Théo",
+   "x": "Essai validé : demonashura66"
   }
  ]
 }
