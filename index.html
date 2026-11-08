@@ -65,7 +65,7 @@ function ls(k,v){try{if(v===undefined)return localStorage.getItem(k)||"";localSt
   var o=ls("gh_repo");if(o.indexOf("/")>0){G.owner=o.split("/")[0];G.repo=o.split("/")[1]}
   G.token=ls("gh_token");
 })();
-
+ 
 /* ---------- utilitaires ---------- */
 function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
 function today(){return new Date().toISOString().slice(0,10)}
@@ -73,11 +73,11 @@ function fmt(d){if(!d)return"";var p=d.split("-");return p.length==3?p[2]+"/"+p[
 function b64(u){var s="";for(var i=0;i<u.length;i++)s+=String.fromCharCode(u[i]);return btoa(s)}
 function unb64(t){var s=atob(t),u=new Uint8Array(s.length);for(var i=0;i<s.length;i++)u[i]=s.charCodeAt(i);return u}
 function clone(x){return JSON.parse(JSON.stringify(x))}
-
+ 
 /* ---------- mot de passe admin ---------- */
 async function sha(t){return Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256",new TextEncoder().encode(t)))).map(x=>x.toString(16).padStart(2,"0")).join("")}
 async function mkPass(pw){var salt=b64(crypto.getRandomValues(new Uint8Array(16)));return {salt:salt,ph:await sha(salt+":"+pw)}}
-
+ 
 /* ---------- synchronisation GitHub ---------- */
 function api(method,body){
   var h={"Accept":"application/vnd.github+json"};
@@ -114,7 +114,7 @@ async function push(list){
   }catch(e){alert("Erreur réseau : rien n’a été enregistré.");return false}
 }
 async function commit(fn,msg){var l=clone(D);fn(l);if(msg)logit(l,msg);if(await push(l)){D=l;return true}return false}
-
+ 
 /* ---------- écrans ---------- */
 /* ---------- écrans ---------- */
 var TABS=[["staff","Staff"],["essais","Essais"],["inact","Inactivité"],["cands","Candidatures"],["sanc","Sanctions"],["stats","Stats"],["logs","Journal"]];
@@ -125,8 +125,8 @@ function logit(l,x){l.logs.push({t:new Date().toISOString(),w:ME?ME.name:(ADMIN?
 function sname(id){var s=D.staff.find(x=>x.id===id);return s?s.pseudo:"—"}
 function lastAct(s){return [s.arrivee,s.derniere].concat(D.sanctions.filter(x=>x.auteur===s.id).map(x=>x.date)).filter(Boolean).sort().pop()||""}
 function go(view,id){ui.view=view;ui.id=id||null;render()}
-function render(){({gate:gate,setup:setup,dlogin:dlogin,settings:settings,fiche:fiche,main:main})[ui.view]()}
-
+function render(){({gate:gate,setup:setup,settings:settings,fiche:fiche,main:main})[ui.view]()}
+ 
 function form(title,fields,v,save,back,del){
   var h=`<button class="sec" id="back">← Retour</button><h1 style="margin-top:12px">${title}</h1>`;
   fields.forEach(f=>{
@@ -147,7 +147,7 @@ function form(title,fields,v,save,back,del){
   };
 }
 function backMain(){ui.view="main";render()}
-
+ 
 function gate(){
   var dc=D.cfg.cid;
   app.innerHTML=`<div class="gate"><h1>Suivi du staff</h1>${dc?`<div class="sub">Staff : connecte-toi avec Discord.</div><button id="dl" style="width:100%">Se connecter avec Discord</button><div class="sub" style="margin:20px 0 6px">Admin</div>`:'<div class="sub">Accès admin.</div>'}<div class="err" id="err">${esc(ui.err)}</div><div class="field"><input type="password" id="pw" placeholder="Mot de passe admin" autocomplete="current-password"></div><button id="go" class="${dc?"sec":""}" style="width:100%">Entrer en admin</button></div>`;
@@ -205,7 +205,7 @@ function settings(){
     if(!confirm("Remplacer toutes les données actuelles par cette sauvegarde ?"))return;
     commit(l=>{["staff","cands","sanctions","logs"].forEach(k=>l[k]=x[k]||[])},"Sauvegarde importée").then(ok=>ok&&alert("Sauvegarde importée."))};
 }
-
+ 
 function main(){
   app.innerHTML=`<div class="row"><h1>Suivi du staff</h1><button class="sec" id="st" aria-label="Réglages">⚙</button></div>${ADMIN?'<div class="meta" style="margin-bottom:8px">Connecté en admin</div>':""}${G.token?"":'<div class="banner">Lecture seule : ajoute un jeton GitHub dans ⚙ pour modifier.</div>'}<div class="nav">${TABS.map(t=>`<button class="chip${ui.tab===t[0]?" on":""}" data-t="${t[0]}">${t[1]}</button>`).join("")}</div><div id="tab"></div>`;
   document.getElementById("st").onclick=()=>go("settings");
@@ -221,7 +221,7 @@ function search(el,fn,ph,addLabel,addFn){
   upd();bind(r);
 }
 function bind(r){r.querySelectorAll("[data-go]").forEach(c=>c.onclick=()=>{var p=c.dataset.go.split(":");p[0]==="fiche"?go("fiche",p[1]):p[0]==="csanc"?editSanc(p[1]):editCand(p[1])})}
-
+ 
 function tStaff(el){
   search(el,q=>{
     var h="";
@@ -260,7 +260,7 @@ function fiche(){
   app.querySelectorAll("[data-e]").forEach(b=>b.onclick=()=>{if(!confirm("Supprimer cette entrée ?"))return;
     commit(l=>{var d=l.staff.find(x=>x.id===s.id);d.entries=d.entries.filter(x=>x.id!==b.dataset.e)},"Entrée supprimée du dossier de "+s.pseudo).then(ok=>ok&&render())});
 }
-
+ 
 function tEssais(el){
   var l=D.staff.filter(s=>s.essaiFin).sort((a,b)=>a.essaiFin.localeCompare(b.essaiFin));
   el.innerHTML=l.length?l.map(s=>{var n=days(s.essaiFin),c=n<0?"late":n<=7?"soon":"";return `<div class="card" data-go="fiche:${s.id}"><div class="row"><span class="name">${esc(s.pseudo)}</span><span class="tag ${c}">${n<0?"terminée depuis "+(-n)+" j":n===0?"fin aujourd’hui":"J-"+n}</span></div><div class="meta">${esc(s.grade||"Sans grade")} · fin le ${fmt(s.essaiFin)}</div><div class="actions"><button class="sec" data-v="${s.id}">Valider l’essai</button></div></div>`}).join(""):'<div class="empty">Aucune période d’essai en cours. Renseigne une date de fin dans la fiche d’un staff.</div>';
@@ -278,7 +278,7 @@ function tInact(el){
   el.querySelectorAll("[data-a]").forEach(b=>b.onclick=e=>{e.stopPropagation();var s=D.staff.find(x=>x.id===b.dataset.a);commit(l=>{l.staff.find(x=>x.id===s.id).derniere=today()},"Activité confirmée : "+s.pseudo).then(ok=>ok&&main())});
   el.querySelectorAll("[data-i]").forEach(b=>b.onclick=e=>{e.stopPropagation();var s=D.staff.find(x=>x.id===b.dataset.i);commit(l=>{l.staff.find(x=>x.id===s.id).statut="inactif"},"Passé inactif : "+s.pseudo).then(ok=>ok&&main())});
 }
-
+ 
 function tCands(el){
   search(el,q=>D.cands.filter(c=>!q||(c.pseudo+" "+c.poste).toLowerCase().includes(q)).sort((a,b)=>(b.date||"").localeCompare(a.date||"")).map(c=>`<div class="card" data-go="ccand:${c.id}"><div class="row"><span class="name">${esc(c.pseudo)}</span><span class="tag ${c.statut}">${c.statut}</span></div><div class="meta">${esc(c.poste||"Poste non précisé")} · ${fmt(c.date)}${c.score?" · note "+esc(c.score)+"/10":""}</div>${c.statut==="acceptée"&&!D.staff.some(s=>s.candId===c.id)?`<div class="actions"><button class="sec" data-s="${c.id}">Créer le dossier staff</button></div>`:""}</div>`).join(""),"Rechercher une candidature…","+ Candidature",()=>editCand(null));
   el.querySelectorAll("[data-s]").forEach(b=>b.onclick=e=>{e.stopPropagation();var c=D.cands.find(x=>x.id===b.dataset.s);
@@ -293,7 +293,7 @@ function editCand(id){
     commit(l=>{var d=l.cands.find(x=>x.id===nid);if(!d){d={id:nid};l.cands.push(d)}Object.assign(d,o)},"Candidature "+(id?"modifiée":"ajoutée")+" : "+o.pseudo+" ("+o.statut+")").then(ok=>ok&&backMain());
   },backMain,id&&ADMIN?()=>commit(l=>l.cands.splice(l.cands.findIndex(x=>x.id===id),1),"Candidature supprimée : "+c.pseudo).then(ok=>ok&&backMain()):null);
 }
-
+ 
 function cnt(p){return D.sanctions.filter(x=>x.joueur.toLowerCase()===p.toLowerCase()).length}
 function tSanc(el){
   search(el,q=>D.sanctions.filter(x=>!q||(x.joueur+" "+x.joueurId+" "+x.motif).toLowerCase().includes(q)).sort((a,b)=>b.date.localeCompare(a.date)||b.id.localeCompare(a.id)).map(x=>{var n=cnt(x.joueur);return `<div class="card" data-go="csanc:${x.id}"><div class="row"><span class="name">${esc(x.joueur)}</span><span class="tag ${x.type==="Avertissement"?"observation":"late"}">${esc(x.type)}</span></div><div class="meta">${fmt(x.date)} · par ${esc(sname(x.auteur))}${x.duree?" · "+esc(x.duree):""}${n>=3?" · récidive ×"+n:""}</div><div>${esc(x.motif)}</div></div>`}).join(""),"Rechercher un joueur, un motif…","+ Sanction",()=>editSanc(null));
@@ -307,7 +307,7 @@ function editSanc(id){
     commit(l=>{var d=l.sanctions.find(y=>y.id===nid);if(!d){d={id:nid};l.sanctions.push(d)}Object.assign(d,o)},"Sanction "+(id?"modifiée":"ajoutée")+" : "+o.type+" pour "+o.joueur).then(ok=>ok&&backMain());
   },backMain,id&&ADMIN?()=>commit(l=>l.sanctions.splice(l.sanctions.findIndex(y=>y.id===id),1),"Sanction supprimée : "+x.joueur).then(ok=>ok&&backMain()):null);
 }
-
+ 
 function bars(rows){var m=Math.max.apply(null,rows.map(r=>r[1]).concat([1]));return rows.length?rows.map(r=>`<div class="bar2"><span>${esc(r[0])}</span><i style="width:${Math.round(r[1]/m*60)}%"></i><b>${r[1]}</b></div>`).join(""):'<div class="meta">Pas de données.</div>'}
 function tStats(el){
   var S2=D.sanctions,c30=S2.filter(x=>(new Date(today())-new Date(x.date))/DAY<=30).length;
@@ -320,7 +320,7 @@ function tStats(el){
 function tLogs(el){
   el.innerHTML=D.logs.length?D.logs.slice().reverse().map(x=>{var d=new Date(x.t);return `<div class="entry"><div class="h"><span>${d.toLocaleDateString("fr-FR")} ${d.toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"})}</span><span>${esc(x.w)}</span></div><p>${esc(x.x)}</p></div>`}).join(""):'<div class="empty">Le journal se remplit automatiquement à chaque modification.</div>';
 }
-
+ 
 /* ---------- démarrage ---------- */
 function dTok(){var m=location.hash.match(/access_token=([^&]+)/);if(m){try{sessionStorage.setItem("dt",m[1])}catch(e){}history.replaceState(null,"",location.pathname+location.search)}try{return sessionStorage.getItem("dt")||""}catch(e){return ""}}
 (async function(){
@@ -341,3 +341,4 @@ function dTok(){var m=location.hash.match(/access_token=([^&]+)/);if(m){try{sess
 </script>
 </body>
 </html>
+ 
