@@ -62,7 +62,8 @@
    "grade": "Référent Admin",
    "arrivee": "2026-11-08",
    "statut": "actif",
-   "entries": []
+   "entries": [],
+   "derniere": "2026-11-08"
   },
   {
    "id": "s1005",
@@ -229,6 +230,11 @@
    "t": "2026-11-08T17:26:48.642Z",
    "w": "Théo",
    "x": "Staff modifié : demonashura66"
+  },
+  {
+   "t": "2026-11-08T17:28:23.444Z",
+   "w": "Théo",
+   "x": "Activité confirmée : Abi"
   }
  ]
 }
