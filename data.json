@@ -163,7 +163,8 @@
    "arrivee": "2026-11-01",
    "statut": "actif",
    "entries": [],
-   "essaiFin": ""
+   "essaiFin": "",
+   "derniere": "2026-11-08"
   },
   {
    "id": "s1016",
@@ -218,6 +219,11 @@
    "t": "2026-11-08T17:25:48.954Z",
    "w": "Théo",
    "x": "Staff modifié : demonashura66"
+  },
+  {
+   "t": "2026-11-08T17:26:25.916Z",
+   "w": "Théo",
+   "x": "Activité confirmée : demonashura66"
   }
  ]
 }
